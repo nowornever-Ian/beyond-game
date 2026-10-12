@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>無盡深處 · Beyond</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a26;
+  --border: #2a2a3a;
+  --text: #e0e0e8;
+  --text-dim: #8888a0;
+  --accent: #7b5cff;
+  --accent2: #a78bfa;
+  --gold: #f5c542;
+  --cyan: #22d3ee;
+  --purple: #c084fc;
+  --red: #f87171;
+  --green: #4ade80;
+  --common: #9ca3af;
+  --uncommon: #4ade80;
+  --rare: #60a5fa;
+  --epic: #c084fc;
+  --legendary: #f5c542;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+#app {
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: linear-gradient(180deg, #0d0d14 0%, #0a0a0f 100%);
+}
+/* Header */
+.header {
+  padding: 12px 16px 8px;
+  background: rgba(18,18,26,0.95);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.stat {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.stat b { color: var(--text); font-weight: 600; }
+.stat .gold { color: var(--gold); }
+.stat .depth { color: var(--accent2); }
+.btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.btn {
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.96); }
+.btn:hover { border-color: var(--accent); }
+.btn.primary {
+  background: linear-gradient(135deg, #5b3fd4, #7b5cff);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+.btn.danger {
+  background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.gold {
+  background: linear-gradient(135deg, #92400e, #d97706);
+  border-color: transparent;
+  color: #fff;
+}
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.btn.small { padding: 5px 10px; font-size: 12px; }
+
+/* Main explore area */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.depth-display {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(123,92,255,0.4);
+}
+.depth-label {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: -8px;
+}
+.cell-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 16px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.cell-card.reveal-common { border-color: var(--common); }
+.cell-card.reveal-uncommon { border-color: var(--uncommon); box-shadow: 0 0 20px rgba(74,222,128,0.15); }
+.cell-card.reveal-rare { border-color: var(--rare); box-shadow: 0 0 24px rgba(96,165,250,0.2); }
+.cell-card.reveal-epic { border-color: var(--epic); box-shadow: 0 0 28px rgba(192,132,252,0.25); }
+.cell-card.reveal-legendary {
+  border-color: var(--legendary);
+  box-shadow: 0 0 36px rgba(245,197,66,0.35);
+  animation: legendaryPulse 2s ease-in-out infinite;
+}
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 0 36px rgba(245,197,66,0.35); }
+  50% { box-shadow: 0 0 50px rgba(245,197,66,0.55); }
+}
+.cell-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.cell-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.cell-rarity {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.cell-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+  max-width: 320px;
+}
+.cell-value {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--gold);
+  font-weight: 600;
+}
+.cell-event {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--cyan);
+  text-align: center;
+}
+
+/* Inventory strip */
+.run-inv {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.run-inv-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+.run-inv-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+.inv-chip {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.inv-chip .r { font-weight: 600; }
+
+/* Action buttons */
+.actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 0 8px;
+}
+.actions .btn {
+  flex: 1;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+.actions .btn.retreat {
+  flex: 0.7;
+  background: var(--bg3);
+  border: 1px solid #4a3a1a;
+  color: var(--gold);
+}
+
+/* Status effects */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.status-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.status-tag.buff { border-color: var(--green); color: var(--green); }
+.status-tag.debuff { border-color: var(--red); color: var(--red); }
+
+/* Screens (modals / panels) */
+.screen {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  z-index: 50;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.screen.active { display: flex; }
+.screen-header {
+  padding: 14px 16px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.screen-header h2 {
+  font-size: 18px;
+  flex: 1;
+}
+.screen-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.screen-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+/* Collection / Codex */
+.filter-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.filter-btn {
+  padding: 5px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+.filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.item-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.item-card .icon { font-size: 28px; flex-shrink: 0; }
+.item-card .info { flex: 1; min-width: 0; }
+.item-card .name { font-weight: 600; font-size: 14px; }
+.item-card .meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.item-card .actions { display: flex; gap: 4px; flex-shrink: 0; align-self: center; }
+.qty { color: var(--cyan); font-weight: 600; }
+
+/* Shop */
+.skill-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.skill-card.owned { border-color: var(--green); }
+.skill-card .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.skill-card .name { font-weight: 700; font-size: 15px; }
+.skill-card .cat {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg3);
+  color: var(--text-dim);
+}
+.skill-card .desc { font-size: 12px; color: var(--text-dim); margin: 6px 0; line-height: 1.4; }
+.skill-card .level { font-size: 12px; color: var(--accent2); }
+.skill-card .price { color: var(--gold); font-weight: 600; font-size: 14px; }
+
+/* Modal */
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.modal p { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 8px; }
+.modal .list {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.modal .list div { padding: 3px 0; display: flex; justify-content: space-between; }
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.modal-btns .btn { flex: 1; padding: 12px; }
+
+/* Death screen special */
+.death-title {
+  color: var(--red);
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.lost-value {
+  color: var(--red);
+  font-size: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Toast */
+.toast {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--bg3);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Particle / reveal effect */
+.particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: floatUp 1.2s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.3); }
+}
+
+/* Start / Title */
+.title-screen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #1a1028 0%, #0a0a0f 70%);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.title-screen h1 {
+  font-size: 36px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a78bfa, #f5c542);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  letter-spacing: 4px;
+}
+.title-screen .sub {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+.title-screen .btn {
+  width: 200px;
+  padding: 14px;
+  margin: 6px 0;
+  font-size: 15px;
+}
+
+/* Rarity colors */
+.r-common { color: var(--common); }
+.r-uncommon { color: var(--uncommon); }
+.r-rare { color: var(--rare); }
+.r-epic { color: var(--epic); }
+.r-legendary { color: var(--legendary); }
+
+/* Stats panel */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+.stat-box .val { font-size: 20px; font-weight: 700; color: var(--accent2); }
+.stat-box .lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* Achievement toast style */
+.ach-toast {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.empty-msg {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Mobile safe */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .actions, .screen-footer { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Title Screen -->
+  <div class="title-screen" id="titleScreen">
+    <h1>無盡深處</h1>
+    <div class="sub">Beyond · 每次探索花費 80 金錢<br>向前一步，或帶著一切離開</div>
+    <button class="btn primary" id="btnStart">開始探索（-80）</button>
+    <button class="btn" id="btnContinue" style="display:none">繼續旅程</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header" id="mainHeader" style="display:none">
+    <div class="header-row">
+      <div class="stat">金錢 <b class="gold" id="moneyDisplay">0</b></div>
+      <div class="stat">深度 <b class="depth" id="depthDisplay">0</b></div>
+      <div class="stat">最佳 <b id="bestDepthDisplay">0</b></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn small" id="btnCollection">收藏室</button>
+      <button class="btn small" id="btnShop">技能商店</button>
+      <button class="btn small" id="btnCodex">圖鑑</button>
+      <button class="btn small" id="btnStats">紀錄</button>
+    </div>
+  </div>
+
+  <!-- Main Explore -->
+  <div class="main" id="mainExplore" style="display:none">
+    <div class="depth-display" id="depthBig">0</div>
+    <div class="depth-label">探索深度</div>
+
+    <div class="status-bar" id="statusBar"></div>
+
+    <div class="cell-card" id="cellCard">
+      <div class="particles" id="particles"></div>
+      <div class="cell-icon" id="cellIcon">🌑</div>
+      <div class="cell-name" id="cellName">黑暗的入口</div>
+      <div class="cell-rarity" id="cellRarity"></div>
+      <div class="cell-desc" id="cellDesc">你站在無盡道路的起點。前方一片漆黑，每一步都可能帶來寶藏……或死亡。</div>
+      <div class="cell-value" id="cellValue"></div>
+      <div class="cell-event" id="cellEvent"></div>
+    </div>
+
+    <div class="run-inv" id="runInvBox">
+      <div class="run-inv-title">
+        <span>本次攜帶</span>
+        <span>估值 <b class="gold" id="runValue">0</b></span>
+      </div>
+      <div class="run-inv-list" id="runInvList">
+        <span style="color:var(--text-dim);font-size:12px">尚未收集任何物品</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn retreat" id="btnRetreat">撤退</button>
+      <button class="btn primary" id="btnForward">向前一步 →</button>
+    </div>
+  </div>
+
+  <!-- Collection Screen -->
+  <div class="screen" id="screenCollection">
+    <div class="screen-header">
+      <button class="btn small" id="btnBackCol">← 返回</button>
+      <h2>收藏室</h2>
+    </div>
+    <div class="screen-body">
+      <div class="stats-grid" id="colStats"></div>
+      <div class="filter-row" id="colFilters"></div>
+      <div class="item-grid" id="colList"></div>
+    </div>
+    <div class="screen-footer">
+      <button class="btn gold" id="btnSellFiltered" style="width:100%">出售目前篩選物品</button>
+    </div>
+  </div>
+
+  <!-- Shop Screen -->
+  <div class="screen" id="screenShop">
+    <div class="screen-header">
+      <button class="btn small" id="btnBackShop">← 返回</button>
+      <h2>技能商店</h2>
+      <span class="gold" id="shopMoney">0</span>
+    </div>
+    <div class="screen-body" id="shopList"></div>
+  </div>
+
+  <!-- Codex Screen -->
+  <div class="screen" id="screenCodex">
+    <div class="screen-header">
+      <button class="btn small" id="btnBackCodex">← 返回</button>
+      <h2>收藏圖鑑</h2>
+    </div>
+    <div class="screen-body">
+      <div id="codexProgress" style="margin-bottom:12px;font-size:13px;color:var(--text-dim)"></div>
+      <div class="filter-row" id="codexFilters"></div>
+      <div class="item-grid" id="codexList"></div>
+    </div>
+  </div>
+
+  <!-- Stats Screen -->
+  <div class="screen" id="screenStats">
+    <div class="screen-header">
+      <button class="btn small" id="btnBackStats">← 返回</button>
+      <h2>探索紀錄</h2>
+    </div>
+    <div class="screen-body" id="statsBody"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* PLACEHOLDER - full JS will be uploaded in second commit if needed */
+alert('Uploading full game next...');
+</script>
+</body>
+</html>
